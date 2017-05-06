@@ -1,0 +1,10 @@
+Package: timecont
+Type: Package
+Title: Time control of projects
+Version: 0.2.0
+Author: David Hervas Marin
+Maintainer: David Hervas Marin <ddhervas@yahoo.es>
+Description: Keep track of time dedication for each project
+License: GPL 3
+Encoding: UTF-8
+LazyData: true
