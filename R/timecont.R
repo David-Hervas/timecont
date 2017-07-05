@@ -3,7 +3,7 @@ Start<-function() {
   start_time<<-Sys.time()
 }
 
-End<-function(group=NA, logdir=rev(strsplit(getwd(), "/")[[1]])[3], name=rev(strsplit(getwd(), "/")[[1]])[2], project=rev(strsplit(getwd(), "/")[[1]])[1], financed=FALSE, comment=""){
+End<-function(group=rev(strsplit(getwd(), "/")[[1]])[3], logdir=rev(strsplit(getwd(), "/")[[1]])[4], name=rev(strsplit(getwd(), "/")[[1]])[2], project=rev(strsplit(getwd(), "/")[[1]])[1], financed=FALSE, comment=""){
   if(exists("start_time")){
     save_dir<- substr(getwd(), 1, gregexpr(logdir, getwd())[[1]]+nchar(logdir))
     filename<-paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep="")
@@ -16,7 +16,3 @@ End<-function(group=NA, logdir=rev(strsplit(getwd(), "/")[[1]])[3], name=rev(str
     rm("start_time", envir=.GlobalEnv)
   }
 }
-
-
-
-
