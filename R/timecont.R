@@ -16,3 +16,29 @@ End<-function(group=rev(strsplit(getwd(), "/")[[1]])[3], logdir=rev(strsplit(get
     rm("start_time", envir=.GlobalEnv)
   }
 }
+
+#Check time
+check_time<- function(group=NULL, user=NULL, unit="h"){
+  units <- ifelse(unit =="h", 60, 1)
+  datos <- read.csv2(paste("\\\\iislafesql16/RC_bioestadistica/Proyectos/", paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep=""), sep=""))
+  datos$Tiempo<-round(datos$Tiempo/units,2)
+  if(!is.null(group)){
+    subdatos <- datos[grep(tolower(group), tolower(iconv(datos$Grupo, to = "ASCII//TRANSLIT"))),]
+  }
+  if(!is.null(user)){
+    subdatos <- datos[grep(tolower(user), tolower(iconv(datos$Nombre, to = "ASCII//TRANSLIT"))),]
+  }
+  if(exists("subdatos")){
+    total <- tapply(subdatos$Tiempo, factor(subdatos$Grupo), function(x) sum(x, na.rm=TRUE))
+    desglose <- sapply(unique(subdatos$Grupo), function(x) tapply(subdatos$Tiempo[subdatos$Grupo %in% x], factor(subdatos$Nombre[subdatos$Grupo %in% x]), function(x) sum(x, na.rm=TRUE)))
+    if (class(desglose) == "list") names(desglose)<-unique(subdatos$Grupo)
+    return(list(Total=total, Desglosado=desglose))
+  } else {
+    return(paste("Horas totales del año", round(sum(datos$Tiempo, na.rm=TRUE),2)))
+    }
+}
+
+list_groups <- function(pattern="[a-z]"){
+  datos <- read.csv2(paste("\\\\iislafesql16/RC_bioestadistica/Proyectos/", paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep=""), sep=""))
+  as.character(unique(datos$Grupo[grep(pattern, tolower(iconv(datos$Grupo, to = "ASCII//TRANSLIT")))]))
+}
