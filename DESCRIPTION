@@ -1,7 +1,7 @@
 Package: timecont
 Type: Package
 Title: Time control of projects
-Version: 0.2.0
+Version: 0.2.1
 Author: David Hervas Marin
 Maintainer: David Hervas Marin <ddhervas@yahoo.es>
 Description: Keep track of time dedication for each project
