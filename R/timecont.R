@@ -1,49 +1,36 @@
 #Time-control
-Start<-function() {
-  start_time<<-Sys.time()
+.timecontenv <- new.env(parent = baseenv())
+
+Start <- function(){
+  assign(".start_time", Sys.time(), envir = .timecontenv)
 }
 
-End<-function(type="analisis", group=rev(strsplit(getwd(), "/")[[1]])[3], logdir=rev(strsplit(getwd(), "/")[[1]])[4], name=rev(strsplit(getwd(), "/")[[1]])[2], project=rev(strsplit(getwd(), "/")[[1]])[1], financed=FALSE, user=Sys.getenv("USERNAME"), comment=""){
-  if(exists("start_time")){
-    save_dir<- substr(getwd(), 1, gregexpr(logdir, getwd())[[1]]+nchar(logdir))
+End <- function(type="analisis", project=rev(strsplit(getwd(), "/")[[1]])[1], logdir="H:\\Prestacion servicios\\timelogs\\", name="", financed=FALSE, user=Sys.getenv("USERNAME"), comment=""){
+  if(exists(".start_time", envir=.timecontenv)){
+    save_dir <- logdir
     filename<-paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep="")
     if(filename %in% list.files(path=save_dir)){
-      write.table(data.frame(Fecha=strsplit(as.character(Sys.time()), " ")[[1]][1], Tiempo=round(as.numeric(difftime(Sys.time(), start_time, units = "mins"))), Nombre=name, Proyecto=project, Tipo=type, Financiado=financed, Grupo=group, Usuario=user, Comentarios=comment), paste(save_dir, filename, sep=""), append=T, row.names=F, col.names=F, dec=",", sep=";")
+      write.table(data.frame(Fecha=strsplit(as.character(Sys.time()), " ")[[1]][1], Tiempo=round(as.numeric(difftime(Sys.time(), .timecontenv$.start_time, units = "mins"))), Nombre=name, Proyecto=project, Tipo=type, Financiado=financed, Usuario=user, Comentarios=comment), paste(save_dir, filename, sep=""), append=T, row.names=F, col.names=F, dec=",", sep=";")
     }
     else{
-      write.table(data.frame(Fecha=strsplit(as.character(Sys.time()), " ")[[1]][1], Tiempo=round(as.numeric(difftime(Sys.time(), start_time, units = "mins"))), Nombre=name, Proyecto=project, Tipo=type, Financiado=financed, Grupo=group, Usuario=user, Comentarios=comment), paste(save_dir, filename, sep=""), row.names=F, dec=",", sep=";")
+      write.table(data.frame(Fecha=strsplit(as.character(Sys.time()), " ")[[1]][1], Tiempo=round(as.numeric(difftime(Sys.time(), .timecontenv$.start_time, units = "mins"))), Nombre=name, Proyecto=project, Tipo=type, Financiado=financed, Usuario=user, Comentarios=comment), paste(save_dir, filename, sep=""), row.names=F, dec=",", sep=";")
     }
-    rm("start_time", envir=.GlobalEnv)
+    rm(".start_time", envir=.timecontenv)
   }
 }
 
-#Check time
-check_time<- function(group=NULL, user=NULL, unit="h", global=FALSE){
-  units <- ifelse(unit =="h", 60, 1)
-  datos <- read.csv2(paste("\\\\iislafesql16/RC_bioestadistica/Proyectos/", paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep=""), sep=""))
-  datos$Tiempo<-round(datos$Tiempo/units,2)
-  datos$Grupo<-factor(tolower(iconv(datos$Grupo, to="ASCII//TRANSLIT")))
-  datos$Nombre<-factor(tolower(iconv(datos$Nombre, to="ASCII//TRANSLIT")))
-  if(!is.null(group)){
-    subdatos <- datos[grep(tolower(group), datos$Grupo),]
-  }
-  if(!is.null(user)){
-    subdatos <- datos[grep(tolower(user), datos$Nombre),]
-  }
-  if(exists("subdatos")){
-    total <- tapply(subdatos$Tiempo, factor(subdatos$Grupo), function(x) sum(x, na.rm=TRUE))
-    desglose <- sapply(unique(subdatos$Grupo), function(x) tapply(subdatos$Tiempo[subdatos$Grupo %in% x], factor(subdatos$Nombre[subdatos$Grupo %in% x]), function(x) sum(x, na.rm=TRUE)))
-    if (class(desglose) == "list") names(desglose)<-unique(subdatos$Grupo)
-    return(list(Total=total, Desglosado=desglose))
-  }
-  if(global){
-    sort(tapply(datos$Tiempo, datos$Grupo, function(x) sum(x, na.rm=TRUE)), decreasing=TRUE)
-  } else {
-    return(paste("Horas totales del año", round(sum(datos$Tiempo, na.rm=TRUE),2)))
-  }
+load_timelog <- function(log_file=paste("H:/Prestacion servicios/timelogs/", paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep=""), sep="")){
+  read.csv2(log_file)
 }
 
-list_groups <- function(pattern="[a-z]"){
-  datos <- read.csv2(paste("\\\\iislafesql16/RC_bioestadistica/Proyectos/", paste("time_log_", strsplit(as.character(Sys.time()), "-")[[1]][1], ".csv", sep=""), sep=""))
-  as.character(unique(datos$Grupo[grep(pattern, tolower(iconv(datos$Grupo, to = "ASCII//TRANSLIT")))]))
+setup_project <- function(){
+  writeLines(c("library(timecont)",
+               "Start()",
+               ".Last <- function(){",
+               "  End()",
+               "}"), ".Rprofile")
+  .Last <<- function(){
+    End()
+  }
+  Start()
 }
